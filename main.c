@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define Q_SIZE 64000
+#define Q_SIZE 100000
 #define M_SIZE 100
-#define ITERATIONS 32000
+#define ITERATIONS 100000
 
 #define MAP_WIDTH 10
 #define MAP_HEIGHT 16
@@ -12,8 +12,7 @@ typedef struct {
     int x, y;
     int armor;
     char map[MAP_WIDTH][MAP_HEIGHT];
-    char moves[M_SIZE];
-    int movesSize;
+    char moves[M_SIZE]; int movesSize;
 } State;
 
 typedef struct {
@@ -38,13 +37,6 @@ typedef struct {
 } Map;
 
 static Map map;
-
-int main(void)
-{
-    Queue q = {};
-    play(&q);
-    return 0;
-}
 
 void push(Queue *q, int priority, State *data) {
     if (q->size == Q_SIZE) {
@@ -75,7 +67,7 @@ void pop(Queue *q, State *data) {
     }
 }
 
-char get(State *s, int x, int y) {
+char get(const State *s, int x, int y) {
     if (x < 0 || x > MAP_WIDTH - 1 || y < 0 || y > MAP_HEIGHT - 1)
         return ' ';
     return s->map[x][y];
@@ -159,7 +151,7 @@ int move(State *s, char dir) {
     s->moves[s->movesSize++] = dir;
 }
 
-int priority(State *s) {
+int priority(const State *s) {
     int distance = abs(s->x - map.endX) + abs (s->y - map.endY);
     return distance + s->movesSize - s->armor;
 }
@@ -233,7 +225,7 @@ int play(Queue *q) {
         if (currentState.map[currentState.x][currentState.y] == 'E') {
             printf("Solution: %s with %d armor\n", currentState.moves, currentState.armor);
             //continue;
-            return;
+            return 0;
         }
 
         if (canMove(&currentState, 'f')) {
@@ -266,4 +258,14 @@ int play(Queue *q) {
     }
 
     printf("Best: %s with %d armor\n", currentState.moves, currentState.armor);
+}
+
+int main(void)
+{
+    printf("Allocation started!\n");
+    Queue *q = (Queue*) calloc(1, sizeof (Queue));
+    printf("Allocation finished!\nAI started!\n");
+    play(q);
+    printf("AI finished!\n");
+    return 0;
 }
