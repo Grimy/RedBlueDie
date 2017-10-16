@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define Q_SIZE 100000
+#define Q_SIZE 10000
 #define M_SIZE 100
 #define ITERATIONS 100000
 
@@ -41,9 +41,7 @@ static Queue q;
 
 void push(Queue *q, int priority, State *data) {
     if (q->size == Q_SIZE) {
-        printf("Cannot push to the queue!\n");
-        exit(0);
-        return;
+        --q->size;
     }
 
     int i = q->size - 1;
