@@ -120,29 +120,24 @@ int canMove(const State *s, char dir) {
 }
 
 int move(State *s, char dir) {
-    char lineDmg, diagDmg;
     switch (dir) {
     case 'f':
         ++(s->y);
-        lineDmg = 'R';
-        diagDmg = 'B';
         break;
     case 'b':
         --(s->y);
-        lineDmg = 'R';
-        diagDmg = 'B';
         break;
     case 'l':
         --(s->x);
-        lineDmg = 'B';
-        diagDmg = 'R';
         break;
     case 'r':
         ++(s->x);
-        lineDmg = 'B';
-        diagDmg = 'R';
         break;
     }
+
+    int vertical = dir == 'f' || dir == 'b';
+    char lineDmg = vertical ? 'R' : 'B';
+    char diagDmg = vertical ? 'B' : 'R';
 
     for (int i = -2; i <= 2; i++) {
         if (i != 0) {
@@ -183,32 +178,15 @@ int play(Queue *q) {
             return 0;
         }
 
-        if (canMove(&currentState, 'f')) {
-            movedState = currentState;
-            move(&movedState, 'f');
-            if (movedState.armor > 0)
-                push(q, priority(&movedState), &movedState);
-        }
+        for (int i = 0; i < 4; ++i) {
+            char direction = "flrb"[i];
 
-        if (canMove(&currentState, 'l')) {
-            movedState = currentState;
-            move(&movedState, 'l');
-            if (movedState.armor > 0)
-                push(q, priority(&movedState), &movedState);
-        }
-
-        if (canMove(&currentState, 'r')) {
-            movedState = currentState;
-            move(&movedState, 'r');
-            if (movedState.armor > 0)
-                push(q, priority(&movedState), &movedState);
-        }
-
-        if (canMove(&currentState, 'b')) {
-            movedState = currentState;
-            move(&movedState, 'b');
-            if (movedState.armor > 0)
-                push(q, priority(&movedState), &movedState);
+            if (canMove(&currentState, direction)) {
+                movedState = currentState;
+                move(&movedState, direction);
+                if (movedState.armor > 0)
+                    push(q, priority(&movedState), &movedState);
+            }
         }
     }
 
