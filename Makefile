@@ -1,2 +1,2 @@
-all:
-	gcc -std=c99 -O3 main.c
+a.out: main.c
+	gcc -std=c99 -O3 $<
