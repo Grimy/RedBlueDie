@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define Q_SIZE 100
 #define M_SIZE 100
@@ -85,7 +86,7 @@ void pop(Queue *q, State *data) {
 
 char get(const State *s, int x, int y) {
     if (x < 0 || x > MAP_WIDTH - 1 || y < 0 || y > MAP_HEIGHT - 1)
-        return ' ';
+        return '#';
     return s->map[x][y];
 }
 
@@ -106,20 +107,10 @@ int canMove(const State *s, char dir) {
         break;
     }
 
-    if (newX < 0 || newX > MAP_WIDTH - 1 || newY < 0 || newY > MAP_HEIGHT - 1)
-        return 0;
-
-    switch (get(s, newX, newY)) {
-    case '#':
-    case 'R':
-    case 'B':
-        return 0;
-    default:
-        return 1;
-    }
+    return !strchr("#RB", get(s, newX, newY));
 }
 
-int move(State *s, char dir) {
+void move(State *s, char dir) {
     switch (dir) {
     case 'f':
         ++(s->y);
@@ -152,11 +143,9 @@ int move(State *s, char dir) {
         }
     }
 
-    if (s->armor > 0) {
-        if (s->map[s->x][s->y] == 'L') {
-            ++(s->armor);
-            s->map[s->x][s->y] = ' ';
-        }
+    if (s->armor > 0 && s->map[s->x][s->y] == 'L') {
+        ++(s->armor);
+        s->map[s->x][s->y] = ' ';
     }
 
     s->moves[s->movesSize++] = dir;
@@ -167,15 +156,14 @@ int priority(const State *s) {
     return 2*distance + s->movesSize - 2*s->armor;
 }
 
-int play(Queue *q) {
+void play(Queue *q) {
     State currentState, movedState;
 
     for (int count = 0; count < ITERATIONS; count++) {
         pop(q, &currentState);
         if (currentState.map[currentState.x][currentState.y] == 'E') {
             printf("Solution: %s with %d armor\n", currentState.moves, currentState.armor);
-            //continue;
-            return 0;
+            return;
         }
 
         for (int i = 0; i < 4; ++i) {
