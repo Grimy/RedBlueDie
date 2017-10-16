@@ -37,6 +37,7 @@ typedef struct {
 } Map;
 
 static Map map;
+static Queue q;
 
 void push(Queue *q, int priority, State *data) {
     if (q->size == Q_SIZE) {
@@ -262,10 +263,7 @@ int play(Queue *q) {
 
 int main(void)
 {
-    printf("Allocation started!\n");
-    Queue *q = (Queue*) calloc(1, sizeof (Queue));
-    printf("Allocation finished!\nAI started!\n");
-    play(q);
+    play(&q);
     printf("AI finished!\n");
     return 0;
 }
