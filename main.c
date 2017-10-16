@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define Q_SIZE 100
+#define Q_SIZE 64
 #define M_SIZE 100
 #define ITERATIONS 100000
+#define MAX_PRIORITY 999999999
 
 #define MAP_WIDTH 10
 #define MAP_HEIGHT 16
@@ -21,10 +22,7 @@ typedef struct {
     State data;
 } Node;
 
-typedef struct {
-    Node nodes[Q_SIZE];
-    int size;
-} Queue;
+typedef Node Queue[Q_SIZE];
 
 typedef struct {
     char color;
@@ -34,54 +32,53 @@ typedef struct {
 #define END_X 4
 #define END_Y 14
 
-static Queue q = {
-    .nodes = {{
-        .priority = 0,
-        .data = {
-            .x = 4, .y = 1,
-            .armor = 1,
-            .map = {
-                "  L     R       ",
-                "     R      R   ",
-                "   R          B ",
-                "         L    E ",
-                "      L   B  E E",
-                "#      B      E ",
-                "#     R      R  ",
-                "#   B      L    ",
-                "   L    R       ",
-                "#       #### ###",
-            },
+static Queue q = {{
+    .priority = 1,
+    .data = {
+        .x = 4, .y = 1,
+        .armor = 1,
+        .map = {
+            "  L     R       ",
+            "     R      R   ",
+            "   R          B ",
+            "         L    E ",
+            "      L   B  E E",
+            "#      B      E ",
+            "#     R      R  ",
+            "#   B      L    ",
+            "   L    R       ",
+            "#       #### ###",
         },
-    }},
-    .size = 1,
-};
+    },
+}};
 
-void push(Queue *q, int priority, State *data) {
-    if (q->size == Q_SIZE) {
-        --q->size;
+void push(int priority, State *data) {
+    int min = MAX_PRIORITY;
+    int best = 0;
+
+    for (int i = 0; i < Q_SIZE; i++) {
+        if (q[i].priority < min) {
+            best = i;
+            min = q[i].priority;
+        }
     }
 
-    int i = q->size - 1;
-    while (i >= 0 && priority < q->nodes[i].priority) {
-        q->nodes[i + 1] = q->nodes[i];
-        --i;
-    }
-    q->nodes[i + 1] = (Node) { .priority = priority, .data = *data };
-    ++(q->size);
+    q[best] = (Node) { .priority = priority, .data = *data };
 }
 
-void pop(Queue *q, State *data) {
-    if (q->size == 0) {
-        printf("Cannot pop from the queue!\n");
-        return;
+void pop(State *data) {
+    int max = 0;
+    int best = 0;
+
+    for (int i = 0; i < Q_SIZE; i++) {
+        if (q[i].priority > max) {
+            best = i;
+            max = q[i].priority;
+        }
     }
 
-    *data = q->nodes[0].data;
-    --(q->size);
-    for (int i = 0; i < q->size; i++) {
-        q->nodes[i] = q->nodes[i + 1];
-    }
+    *data = q[best].data;
+    q[best].priority = 0;
 }
 
 char get(const State *s, int x, int y) {
@@ -153,37 +150,36 @@ void move(State *s, char dir) {
 
 int priority(const State *s) {
     int distance = abs(s->x - END_X) + abs(s->y - END_Y);
-    return 2*distance + s->movesSize - 2*s->armor;
+    return MAX_PRIORITY + 2*s->armor - 2*distance - s->movesSize;
 }
 
-void play(Queue *q) {
+void play() {
     State currentState, movedState;
 
     for (int count = 0; count < ITERATIONS; count++) {
-        pop(q, &currentState);
-        if (currentState.map[currentState.x][currentState.y] == 'E') {
-            printf("Solution: %s with %d armor\n", currentState.moves, currentState.armor);
-            return;
-        }
+        pop(&currentState);
 
         for (int i = 0; i < 4; ++i) {
             char direction = "flrb"[i];
 
-            if (canMove(&currentState, direction)) {
-                movedState = currentState;
-                move(&movedState, direction);
-                if (movedState.armor > 0)
-                    push(q, priority(&movedState), &movedState);
+            if (!canMove(&currentState, direction))
+                continue;
+
+            movedState = currentState;
+            move(&movedState, direction);
+            if (movedState.map[movedState.x][movedState.y] == 'E') {
+                printf("Solution: %s with %d armor\n", movedState.moves, movedState.armor);
+                return;
+            } else if (movedState.armor > 0 && movedState.movesSize < M_SIZE - 1) {
+                push(priority(&movedState), &movedState);
             }
         }
     }
-
-    printf("Best: %s with %d armor\n", currentState.moves, currentState.armor);
 }
 
 int main(void)
 {
-    play(&q);
+    play();
     printf("AI finished!\n");
     return 0;
 }
