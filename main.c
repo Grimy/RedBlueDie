@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define Q_SIZE 10000
+#define Q_SIZE 100
 #define M_SIZE 100
 #define ITERATIONS 100000
 
@@ -16,7 +16,7 @@ typedef struct {
 } State;
 
 typedef struct {
-    int priority; // Distance - armor * 4
+    int priority; // 2*distance + moves - 2*armor
     State data;
 } Node;
 
@@ -37,6 +37,7 @@ typedef struct {
 } Map;
 
 static Map map;
+
 static Queue q;
 
 void push(Queue *q, int priority, State *data) {
@@ -151,8 +152,8 @@ int move(State *s, char dir) {
 }
 
 int priority(const State *s) {
-    int distance = abs(s->x - map.endX) + abs (s->y - map.endY);
-    return distance + s->movesSize - s->armor;
+    int distance = abs(s->x - map.endX) + abs(s->y - map.endY);
+    return 2*distance + s->movesSize - 2*s->armor;
 }
 
 void initMap(State *s) {
