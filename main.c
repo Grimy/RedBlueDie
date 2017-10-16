@@ -30,15 +30,31 @@ typedef struct {
     int x, y;
 } Flower;
 
-typedef struct {
-    int startX, startY;
-    int endX, endY;
-    //Life lifes[L_SIZE];
-} Map;
+#define END_X 4
+#define END_Y 14
 
-static Map map;
-
-static Queue q;
+static Queue q = {
+    .nodes = {{
+        .priority = 0,
+        .data = {
+            .x = 4, .y = 1,
+            .armor = 1,
+            .map = {
+                "  L     R       ",
+                "     R      R   ",
+                "   R          B ",
+                "         L    E ",
+                "      L   B  E E",
+                "#      B      E ",
+                "#     R      R  ",
+                "#   B      L    ",
+                "   L    R       ",
+                "#       #### ###",
+            },
+        },
+    }},
+    .size = 1,
+};
 
 void push(Queue *q, int priority, State *data) {
     if (q->size == Q_SIZE) {
@@ -152,75 +168,14 @@ int move(State *s, char dir) {
 }
 
 int priority(const State *s) {
-    int distance = abs(s->x - map.endX) + abs(s->y - map.endY);
+    int distance = abs(s->x - END_X) + abs(s->y - END_Y);
     return 2*distance + s->movesSize - 2*s->armor;
 }
 
-void initMap(State *s) {
-    map.startX = 4;
-    map.startY = 1;
-    map.endX = 4;
-    map.endY = 14;
-    s->x = map.startX;
-    s->y = map.startY,
-    s->armor = 1;
-    for (int i = 0; i < MAP_WIDTH; i++) {
-        for (int j = 0; j < MAP_HEIGHT; j++) {
-            s->map[i][j] = ' ';
-        }
-    }
-
-    /* Ends */
-    s->map[3][14] = 'E';
-    s->map[5][14] = 'E';
-    s->map[4][13] = 'E';
-    s->map[4][15] = 'E';
-
-    /* Walls */
-    s->map[5][0] = '#';
-    s->map[6][0] = '#';
-    s->map[7][0] = '#';
-    s->map[9][0] = '#';
-    s->map[9][8] = '#';
-    s->map[9][9] = '#';
-    s->map[9][10] = '#';
-    s->map[9][11] = '#';
-    s->map[9][13] = '#';
-    s->map[9][14] = '#';
-    s->map[9][15] = '#';
-
-    /* Blue flowers */
-    s->map[7][4] = 'B';
-    s->map[5][7] = 'B';
-    s->map[4][10] = 'B';
-    s->map[2][14] = 'B';
-
-    /* Red flowers */
-    s->map[2][3] = 'R';
-    s->map[1][5] = 'R';
-    s->map[6][6] = 'R';
-    s->map[0][8] = 'R';
-    s->map[8][8] = 'R';
-    s->map[1][12] = 'R';
-    s->map[6][13] = 'R';
-
-    /* Lifes */
-    s->map[0][2] = 'L';
-    s->map[8][3] = 'L';
-    s->map[4][6] = 'L';
-    s->map[3][9] = 'L';
-    s->map[7][11] = 'L';
-}
-
 int play(Queue *q) {
-    State currentState = {};
-    initMap(&currentState);
-
-    State movedState;
-    push(q, priority(&currentState), &currentState);
+    State currentState, movedState;
 
     for (int count = 0; count < ITERATIONS; count++) {
-    //while (1) {
         pop(q, &currentState);
         if (currentState.map[currentState.x][currentState.y] == 'E') {
             printf("Solution: %s with %d armor\n", currentState.moves, currentState.armor);
